@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"image/png"
 	"io"
+	"net"
 	"net/http"
 	"strconv"
 	"strings"
@@ -42,6 +43,9 @@ type RESTServerOptions struct {
 	SecurePort   int
 	Cert         tls.Certificate
 	AllowedHosts []string
+	// HostMAC overrides the MAC reported in /serverinfo (used by Moonlight's
+	// "Wake PC"). Empty means detect it from the interface the client reached.
+	HostMAC string
 }
 
 type RESTServer struct {
@@ -225,6 +229,8 @@ func (s *RESTServer) serverInfoHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
+	mac, localIP := hostIdentity(r, s.HostMAC, net.Interfaces)
+
 	// TODO: implement this instead of hard code it
 	root := ServerInfoResponse{
 		Response: Response{
@@ -239,8 +245,8 @@ func (s *RESTServer) serverInfoHandler(w http.ResponseWriter, r *http.Request) {
 			ServerCodecModeSupport: 65793, // Bitwise OR of various codecs. Just hardcoding HEVC and AV1 for now
 			HTTPSPort:              s.SecurePort,
 			ExternalPort:           s.Port,
-			MAC:                    "00:00:00:00:00:00", // Does this matter?
-			LocalIP:                "127.0.0.1",         // Does this matter?
+			MAC:                    mac,     // Moonlight sends Wake-on-LAN to this
+			LocalIP:                localIP, // the host IP the client reached
 			SupportedDisplayModes: DisplayModes{
 				Modes: []DisplayMode{
 					{1280, 720, 120}, {1280, 720, 60}, {1280, 720, 30},

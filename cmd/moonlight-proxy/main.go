@@ -27,6 +27,7 @@ func main() {
 	port := flag.Int("port", 47989, "Port to listen on")
 	securePort := flag.Int("secure-port", 47984, "Secure port to listen on")
 	namespace := flag.String("namespace", os.Getenv("POD_NAMESPACE"), "Namespace to watch")
+	hostMAC := flag.String("host-mac", os.Getenv("HOST_MAC"), "MAC address reported to Moonlight for Wake-on-LAN (default: detect from the interface the client connects to)")
 	allowedHostsStr := flag.String("allowed-hosts", os.Getenv("ALLOWED_HOSTS"), "Comma-separated list of allowed external hostnames for pairing URLs (e.g., moonlight.example.com)")
 	klog.InitFlags(nil)
 	flag.Parse()
@@ -104,6 +105,7 @@ func main() {
 			SecurePort:   *securePort,
 			Cert:         tlsCert,
 			AllowedHosts: allowedHosts,
+			HostMAC:      *hostMAC,
 		},
 	)
 
